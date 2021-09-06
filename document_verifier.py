@@ -3,7 +3,7 @@ import face_recognition
 import pytesseract
 import numpy as np
 import re
-from skimage import io
+import urllib.request
 import tflite_runtime.interpreter as tflite
 
 def erode(image):
@@ -141,8 +141,16 @@ def verifyFace(documentType, image, profileImage):
     return all(matches)
 
 def processDocument(documentType, imagePath, profileImagePath, pos):
-    image = io.imread('https://res.cloudinary.com/deutptnkg/image/upload/v1630854624/abren/uploads/id_cards/1630854623368.jpg')
-    profileImage = io.imread('https://res.cloudinary.com/deutptnkg/image/upload/v1630854626/abren/uploads/profiles/1630854625900.jpg')
+    # image = io.imread(imagePath)
+    # profileImage = io.imread(profileImagePath)
+    
+    resp = urllib.request.urlopen(imagePath)
+    image = np.asarray(bytearray(resp.read()), dtype="uint8")
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+    resp2 = urllib.request.urlopen(profileImagePath)
+    profileImage = np.asarray(bytearray(resp2.read()), dtype="uint8")
+    profileImage = cv2.imdecode(profileImage, cv2.IMREAD_COLOR)
     
     data = {
         'isVerified' : False,
