@@ -4,7 +4,7 @@ import pytesseract
 import numpy as np
 import re
 import urllib.request
-import tflite_runtime.interpreter as tflite
+# import tflite_runtime.interpreter as tflite
 
 def erode(image):
     kernel = np.ones((3,3),np.uint8)
