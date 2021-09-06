@@ -4,7 +4,6 @@ import pytesseract
 import numpy as np
 import re
 from skimage import io
-from tensorflow import keras
 
 def erode(image):
     kernel = np.ones((3,3),np.uint8)
