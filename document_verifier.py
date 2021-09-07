@@ -6,6 +6,26 @@ import re
 import urllib.request
 import tflite_runtime.interpreter as tflite
 
+def extractDocument(image):
+    inputImage = cv2.resize(image, (224, 224))
+    inputImage = inputImage[...,::-1].astype(np.float32) / 255.0
+    inputImage = np.expand_dims(inputImage, axis=0)
+    
+    interpreter = tflite.Interpreter(model_path="model_id_dl.tflite")
+    interpreter.allocate_tensors()
+
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    interpreter.set_tensor(input_details[0]['index'], inputImage)
+
+    interpreter.invoke()
+
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+
+    return output_data[0]
+
+
 def erode(image):
     kernel = np.ones((3,3),np.uint8)
     return cv2.erode(image, kernel, iterations = 1)
@@ -140,10 +160,7 @@ def verifyFace(documentType, image, profileImage):
     
     return all(matches)
 
-def processDocument(documentType, imagePath, profileImagePath, pos):
-    # image = io.imread(imagePath)
-    # profileImage = io.imread(profileImagePath)
-    
+def processDocument(documentType, imagePath, profileImagePath):    
     resp = urllib.request.urlopen(imagePath)
     image = np.asarray(bytearray(resp.read()), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
@@ -151,7 +168,10 @@ def processDocument(documentType, imagePath, profileImagePath, pos):
     resp2 = urllib.request.urlopen(profileImagePath)
     profileImage = np.asarray(bytearray(resp2.read()), dtype="uint8")
     profileImage = cv2.imdecode(profileImage, cv2.IMREAD_COLOR)
+        
+    pos = extractDocument(image)
     
+
     data = {
         'isVerified' : False,
         'isLogoVerified': False,    
