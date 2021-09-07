@@ -4,7 +4,7 @@ import pytesseract
 import numpy as np
 import re
 import urllib.request
-import tflite_runtime.interpreter as tflite
+import tflite_runtime.interpreter as tflite 
 
 def extractDocument(image):
     inputImage = cv2.resize(image, (224, 224))
