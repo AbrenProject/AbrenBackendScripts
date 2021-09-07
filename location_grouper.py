@@ -7,7 +7,7 @@ def customDistance(a, b):
 
 def getNeighbors():
     starts = pd.read_csv("random_locations10000.csv")
-    starts = starts[0:2000]
+    starts = starts[0:500]
 
     typeCol = [x % 2 for x in range(starts.shape[0])]
     idCol = ["i" + str(x) for x in range(starts.shape[0])]
