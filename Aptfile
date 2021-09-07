@@ -2,3 +2,4 @@ tesseract-ocr
 tesseract-ocr-eng
 libc6 
 libarchive13
+python3-opencv
