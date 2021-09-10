@@ -3,8 +3,28 @@ import face_recognition
 import pytesseract
 import numpy as np
 import re
-from skimage import io
-from tensorflow import keras
+import urllib.request
+import tflite_runtime.interpreter as tflite 
+
+def extractDocument(image):
+    inputImage = cv2.resize(image, (224, 224))
+    inputImage = inputImage[...,::-1].astype(np.float32) / 255.0
+    inputImage = np.expand_dims(inputImage, axis=0)
+    
+    interpreter = tflite.Interpreter(model_path="model_id_dl.tflite")
+    interpreter.allocate_tensors()
+
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    interpreter.set_tensor(input_details[0]['index'], inputImage)
+
+    interpreter.invoke()
+
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+
+    return output_data[0]
+
 
 def erode(image):
     kernel = np.ones((3,3),np.uint8)
@@ -140,10 +160,18 @@ def verifyFace(documentType, image, profileImage):
     
     return all(matches)
 
-def processDocument(documentType, imagePath, profileImagePath, pos):
-    image = io.imread('https://res.cloudinary.com/deutptnkg/image/upload/v1630854624/abren/uploads/id_cards/1630854623368.jpg')
-    profileImage = io.imread('https://res.cloudinary.com/deutptnkg/image/upload/v1630854626/abren/uploads/profiles/1630854625900.jpg')
+def processDocument(documentType, imagePath, profileImagePath):    
+    resp = urllib.request.urlopen(imagePath)
+    image = np.asarray(bytearray(resp.read()), dtype="uint8")
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+    resp2 = urllib.request.urlopen(profileImagePath)
+    profileImage = np.asarray(bytearray(resp2.read()), dtype="uint8")
+    profileImage = cv2.imdecode(profileImage, cv2.IMREAD_COLOR)
+        
+    pos = extractDocument(image)
     
+
     data = {
         'isVerified' : False,
         'isLogoVerified': False,    
