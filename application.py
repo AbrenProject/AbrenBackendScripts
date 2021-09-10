@@ -1,7 +1,7 @@
 from flask import Flask
 import numpy as np
 import document_verifier as dv
-# import location_grouper as lg
+import location_grouper as lg
 
 app = Flask(__name__)
 
@@ -23,11 +23,11 @@ def verifyDocument():
 
     return data
 
-# @app.route('/nearest-rides')
-# def nearestRides():
-#     data = lg.getNeighbors()
+@app.route('/nearest-rides')
+def nearestRides():
+    data = lg.getNeighbors()
 
-#     return str(data)
+    return str(data)
 
 
 if __name__ == '__main__':
