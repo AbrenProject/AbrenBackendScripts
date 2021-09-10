@@ -4,7 +4,8 @@ import pytesseract
 import numpy as np
 import re
 import urllib.request
-import tflite_runtime.interpreter as tflite 
+import tflite_runtime.interpreter as tflite
+from datetime import datetime
 
 def extractDocument(image):
     inputImage = cv2.resize(image, (224, 224))
@@ -95,7 +96,6 @@ def getIDText(result1, result2):
 
     idCardData['issueDate'] = x.group(2).strip()
 
-
     x = re.search("Expiry Dt(.*)/(.*\d{4})", result1, re.IGNORECASE)
 
     if (not x):
@@ -107,6 +107,25 @@ def getIDText(result1, result2):
 
     idCardData['expiryDate'] = x.group(2).strip()
 
+    try:
+        issueDate = datetime.strptime(idCardData['issueDate'], '%b %d, %Y')
+    except ValueError:
+        try:
+            issueDate = datetime.strptime(idCardData['expiryDate'].split(',')[0] + "," + idCardData['issueDate'].split(', ')[1], '%b %d, %Y')
+        except:
+            idCardData['isValid'] = False
+            return idCardData
+
+    try:
+        expiryDate = datetime.strptime(idCardData['issueDate'].split(',')[0] + ", " + idCardData['expiryDate'].split(', ')[1], '%b %d, %Y')       
+    except:
+        idCardData['isValid'] = False
+        return idCardData
+
+    now = datetime.now()
+    if issueDate > now or expiryDate < now:
+        idCardData['isValid'] = False
+        return idCardData
 
     return idCardData
 
@@ -114,6 +133,35 @@ def getDLText(result1, result2):
     dlData = {
         'isValid': True
     }
+
+    x = re.search("(\d{1,2}/\d{1,2}/\d{4}).*(\d{1,2}/\d{1,2}/\d{4})", result1, re.IGNORECASE)
+
+    if (not x):
+        x = re.search("(\d{1,2}/\d{1,2}/\d{4}).*(\d{1,2}/\d{1,2}/\d{4})", result2, re.IGNORECASE)
+    
+    if(not x):
+        dlData['isValid'] = False
+        return dlData
+    
+    dlData['issueDate'] = x.group(1)
+    dlData['expiryDate'] = x.group(2)
+    
+    try:
+        issueDate = datetime.strptime(dlData['issueDate'], '%d/%m/%Y')
+        expiryDate = datetime.strptime(dlData['expiryDate'], '%d/%m/%Y')
+    except ValueError:
+        dlData['isValid'] = False
+        return dlData
+    
+    now = datetime.now()
+    if now >= datetime(now.year, 1, 1) and now <= datetime(now.year, 9, 10):
+        now = datetime(now.year - 8, now.month - 8, now.day)
+    else:
+        now = datetime(now.year - 7, now.month - 8, now.day)
+
+    if issueDate > now or expiryDate < now:
+        dlData['isValid'] = False
+        return dlData
     
     return dlData
 
@@ -128,29 +176,23 @@ def extractText(documentType, image):
     custom_config = r'-c tessedit_char_whitelist= 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/  --oem 3 --psm 6'
 
     result1 = pytesseract.image_to_string(eroded1, config=custom_config)
-
-
     result2 = pytesseract.image_to_string(eroded2, config=custom_config)
-#    print(result1)
 
-#     print("----------------------")
-#     print(result2)
+    # print(result1)
+
+    # print("----------------------")
+    # print(result2)
     
-#     print("----------------------")
-#     print("----------------------")
-    
-#     cv2.imshow('eroded1', eroded1)
-#     cv2.waitKey(0)
-#     cv2.imshow('eroded2', eroded2)
-#     cv2.waitKey(0)
+    # print("----------------------")
+    # print("----------------------")
 
     return getIDText(result1, result2) if documentType == "ID" else getDLText(result1, result2)
 
-def verifyFace(documentType, image, profileImage):
+def verifyFace(image, profileImage):
     imageEncodings = face_recognition.face_encodings(image)
     profileEncodings = face_recognition.face_encodings(profileImage)
     
-    if(documentType == "ID" and len(imageEncodings) < 1):
+    if(len(imageEncodings) < 1):
         return False
 
     if(len(profileEncodings) != 1):
@@ -169,12 +211,11 @@ def processDocument(documentType, imagePath, profileImagePath):
     profileImage = np.asarray(bytearray(resp2.read()), dtype="uint8")
     profileImage = cv2.imdecode(profileImage, cv2.IMREAD_COLOR)
         
-    pos = extractDocument(image)
-    
+    pos = extractDocument(image)    
 
     data = {
         'isVerified' : False,
-        'isLogoVerified': False,    
+        'isLogoVerified': True, #TODO: Change    
         'isTextVerified': False,
         'isFaceVerified': False,
     }
@@ -213,6 +254,9 @@ def processDocument(documentType, imagePath, profileImagePath):
         scale -= 1
         
     if(data['isTextVerified']):
-        data['isFaceVerified'] = verifyFace(documentType, image, profileImage)
+        data['isFaceVerified'] = verifyFace(image, profileImage)
+
+    if(data['isTextVerified'] and data['isFaceVerified'] and data['isLogoVerified']):
+        data['isVerified'] = True
         
     return data
