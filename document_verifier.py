@@ -228,10 +228,7 @@ def processDocument(documentType, imagePath, profileImagePath):
             break
             
         textData = extractText(documentType, idImage)
-        if documentType == "ID":
-            data['idCardData'] = textData
-        else:
-            data['drivingLicenseData'] = textData
+        data['data'] = textData
         
         data['isTextVerified'] = textData['isValid']
         
@@ -244,10 +241,7 @@ def processDocument(documentType, imagePath, profileImagePath):
         if(idImage is None):
             break
         textData = extractText(documentType, idImage)
-        if documentType == "ID":
-            data['idCardData'] = textData
-        else:
-            data['drivingLicenseData'] = textData
+        data['data'] = textData
         
         data['isTextVerified'] = textData['isValid']
         
