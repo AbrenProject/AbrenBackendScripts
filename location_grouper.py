@@ -57,9 +57,4 @@ def getLocations(ridesJson, requestsJson):
     starts = pd.concat([rideStarts, requestStarts]).reset_index(drop=True)
     dests = pd.concat([rideDests, requestDests]).reset_index(drop=True)
 
-    print()
-    print(starts)
-    print()
-    print(dests)
-
     return (starts, dests)
