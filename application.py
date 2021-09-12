@@ -34,9 +34,10 @@ def verifyDocument():
 
 @app.route('/nearest-rides', methods=['POST'])
 def nearestRides():
-    data = lg.getNeighbors()
-
-    return str(data)
+    # print(request.json)
+    data = lg.getNearestRides(request.json['rides'], request.json['requests'])
+    print(data)
+    return data
 
 
 if __name__ == '__main__':
