@@ -36,12 +36,12 @@ def match_template(image, template):
 
 def prepareImage(image, pos, scale):
     (h, w) = image.shape[:2]
-    t = min((pos[1::2] * h).astype(int)) - 10 * scale
-    b = max((pos[1::2] * h).astype(int)) + 10 * scale
-    l = min((pos[0::2] * w).astype(int)) - 10 * scale
-    r = max((pos[0::2] * w).astype(int)) + 10 * scale
+    t = min((pos[1::2] * h).astype(int)) - 50 * scale
+    b = max((pos[1::2] * h).astype(int)) + 50 * scale
+    l = min((pos[0::2] * w).astype(int)) - 50 * scale
+    r = max((pos[0::2] * w).astype(int)) + 50 * scale
     
-    if (b - t) < 100 or (r - l) < 100 or t < 0 or b > h or l < 0 or r > w:
+    if (b - t) < 300 or (r - l) < 300 or t < 0 or b > h or l < 0 or r > w:
         return None
 
     return image[t:b, l:r]
@@ -178,13 +178,13 @@ def extractText(documentType, image):
     result1 = pytesseract.image_to_string(eroded1, config=custom_config)
     result2 = pytesseract.image_to_string(eroded2, config=custom_config)
 
-    # print(result1)
+    print(result1)
 
-    # print("----------------------")
-    # print(result2)
+    print("----------------------")
+    print(result2)
     
-    # print("----------------------")
-    # print("----------------------")
+    print("----------------------")
+    print("----------------------")
 
     return getIDText(result1, result2) if documentType == "ID" else getDLText(result1, result2)
 
