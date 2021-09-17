@@ -7,12 +7,25 @@ _abs = abs
 def customDistance(a, b):
     return _abs(a[0] - b[0]) + _abs(a[1] - b[1]) + _abs(_abs(a[2] - b[2]) - 1) #TODO: Maybe make type values larger  
 
+def getIdList(request):
+    return request['_id']
+
 def getNearestRides(ridesJson, requestsJson):
-    (starts, dests) = getLocations(ridesJson, requestsJson)
-    result = {
-        "startNeighbors": getNeighbors(starts, 3),
-        "destinationNeighbors": getNeighbors(dests, 5)
-    }
+    if (len(ridesJson) < 3):
+        requestsId = list(map(getIdList, requestsJson))
+        ridesId = list(map(getIdList, ridesJson))
+        rides = [ridesId] * len(requestsId)
+        requests = dict(zip(requestsId, rides))
+        result = {
+            "startNeighbors": requests,
+            "destinationNeighbors": requests
+        }
+    else: 
+        (starts, dests) = getLocations(ridesJson, requestsJson)
+        result = {
+            "startNeighbors": getNeighbors(starts, 3),
+            "destinationNeighbors": getNeighbors(dests, 5)
+        }
 
     return result    
 
