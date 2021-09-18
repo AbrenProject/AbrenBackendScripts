@@ -31,6 +31,26 @@ def erode(image):
     kernel = np.ones((3,3),np.uint8)
     return cv2.erode(image, kernel, iterations = 1)
 
+def get_grayscale(image):
+    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+def thresholding(image, threshold=105):
+    return cv2.threshold(image, threshold, 255, cv2.THRESH_BINARY)[1]
+
+def brightness(img, brightness = 0):
+    return cv2.addWeighted(img, 1, img, 0, brightness)
+
+def contrast(img, contrast = 0):
+    if contrast != 0:
+        Alpha = float(131 * (contrast + 127)) / (127 * (131 - contrast))
+        Gamma = 127 * (1 - Alpha)
+        img = cv2.addWeighted(img, Alpha, img, 0, Gamma)
+    return img
+
+def sharpen(img):
+    kernel = np.array([[-2,-2,-2], [-2,18,-2], [-2,-2,-2]])
+    return cv2.filter2D(img, -1, kernel)
+
 def match_template(image, template):
     return cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
 
@@ -47,15 +67,12 @@ def prepareImage(image, pos, scale):
     return image[t:b, l:r]
 
 
-def getIDText(result1, result2):
+def getIDText(result):
     idCardData = {
         'isValid': True
     }
     
-    x = re.search("Full.*Name(.*)\n", result1, re.IGNORECASE)
-
-    if (not x):
-        x = re.search("Full.*Name(.*)\n", result2, re.IGNORECASE)
+    x = re.search("Full.*Name(.*)\n", result, re.IGNORECASE)
     
     if(not x):
         idCardData['isValid'] = False
@@ -63,9 +80,7 @@ def getIDText(result1, result2):
 
     idCardData['name'] = x.group(1).strip()
 
-    x = re.search("Sex(.*)(.)\n", result2, re.IGNORECASE)
-    if (not x):
-        x = re.search("Sex(.*)(.)\n", result2, re.IGNORECASE)
+    x = re.search("Sex(.*)(.)\n", result, re.IGNORECASE)
         
     if(not x):
         idCardData['isValid'] = False
@@ -73,10 +88,7 @@ def getIDText(result1, result2):
 
     idCardData['sex'] = x.group(2).strip()
 
-    x = re.search("DOB(.*)/(.*\d{4})", result1, re.IGNORECASE)
-
-    if (not x):
-        x = re.search("DOB(.*)/(.*\d{4})", result2, re.IGNORECASE)
+    x = re.search("DOB(.*)/(.*\d{4})", result, re.IGNORECASE)
     
     if(not x):
         idCardData['isValid'] = False
@@ -85,10 +97,7 @@ def getIDText(result1, result2):
     idCardData['dateOfBirth'] = x.group(2).strip()
 
 
-    x = re.search("Issue Dt(.*)/(.*\d{4})", result1, re.IGNORECASE)
-
-    if (not x):
-        x = re.search("Issue Dt(.*)/(.*\d{4})", result2, re.IGNORECASE)
+    x = re.search("Issue Dt(.*)/(.*\d{4})", result, re.IGNORECASE)
     
     if(not x):
         idCardData['isValid'] = False
@@ -96,10 +105,7 @@ def getIDText(result1, result2):
 
     idCardData['issueDate'] = x.group(2).strip()
 
-    x = re.search("Expiry Dt(.*)/(.*\d{4})", result1, re.IGNORECASE)
-
-    if (not x):
-        x = re.search("Expiry Dt(.*)/(.*\d{4})", result2, re.IGNORECASE)
+    x = re.search("Expiry Dt(.*)/(.*\d{4})", result, re.IGNORECASE)
     
     if(not x):
         idCardData['isValid'] = False
@@ -129,15 +135,12 @@ def getIDText(result1, result2):
 
     return idCardData
 
-def getDLText(result1, result2):
+def getDLText(result):
     dlData = {
         'isValid': True
     }
 
-    x = re.search("(\d{1,2}/\d{1,2}/\d{4}).*(\d{1,2}/\d{1,2}/\d{4})", result1, re.IGNORECASE)
-
-    if (not x):
-        x = re.search("(\d{1,2}/\d{1,2}/\d{4}).*(\d{1,2}/\d{1,2}/\d{4})", result2, re.IGNORECASE)
+    x = re.search("(\d{1,2}/\d{1,2}/\d{4}).*(\d{1,2}/\d{1,2}/\d{4})", result, re.IGNORECASE)
     
     if(not x):
         dlData['isValid'] = False
@@ -162,31 +165,26 @@ def getDLText(result1, result2):
     if issueDate > now or expiryDate < now:
         dlData['isValid'] = False
         return dlData
+        
     
     return dlData
 
 def extractText(documentType, image):
-    (h, w) = image.shape[:2]
-    cropped1 = image[0 : int(h / 2), 0:w]
-    cropped2 = image[int(h / 2) - 20 : h, 0:w]
-
-    eroded1 = erode(cropped1)
-    eroded2 = erode(cropped2)
-
     custom_config = r'-c tessedit_char_whitelist= 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/  --oem 3 --psm 6'
-
-    result1 = pytesseract.image_to_string(eroded1, config=custom_config)
-    result2 = pytesseract.image_to_string(eroded2, config=custom_config)
-
-    print(result1)
-
-    print("----------------------")
-    print(result2)
     
-    print("----------------------")
-    print("----------------------")
+    if (documentType == "ID"):
+        image = brightness(image, 60)
+    image = contrast(image, 80)
+    image = sharpen(image)
 
-    return getIDText(result1, result2) if documentType == "ID" else getDLText(result1, result2)
+    image = get_grayscale(image)
+    image = thresholding(image, 0)
+    if (documentType == "ID"):
+        image = erode(image)
+
+    result = pytesseract.image_to_string(image, config=custom_config)
+
+    return getIDText(result) if documentType == "ID" else getDLText(result)
 
 def verifyFace(image, profileImage):
     imageEncodings = face_recognition.face_encodings(image)
