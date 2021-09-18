@@ -180,7 +180,7 @@ def extractText(documentType, image):
     image = get_grayscale(image)
     image = thresholding(image, 0)
     if (documentType == "ID"):
-        image = erode(image)
+        image = erode(image) 
 
     result = pytesseract.image_to_string(image, config=custom_config)
 
