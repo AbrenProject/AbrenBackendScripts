@@ -77,6 +77,7 @@ def getIDText(result):
     x = re.search("Full.*Name(.*)\n", result, re.IGNORECASE)
     
     if(not x):
+        print("name")
         idCardData['isValid'] = False
         return idCardData
 
@@ -85,6 +86,7 @@ def getIDText(result):
     x = re.search("Sex(.*)(.)\n", result, re.IGNORECASE)
         
     if(not x):
+        print("sex")
         idCardData['isValid'] = False
         return idCardData
 
@@ -93,6 +95,7 @@ def getIDText(result):
     x = re.search("DOB(.*)/(.*\d{4})", result, re.IGNORECASE)
     
     if(not x):
+        print("dob")
         idCardData['isValid'] = False
         return idCardData
 
@@ -102,18 +105,20 @@ def getIDText(result):
     x = re.search(" .*ssue Dt(.*)/(.*\d{4})", result, re.IGNORECASE)
     
     if(not x):
+        print("issue")
         idCardData['isValid'] = False
         return idCardData
 
-    idCardData['issueDate'] = x.group(2).strip()
+    idCardData['issueDate'] = x.group(2).strip().replace('.', ',')
 
     x = re.search("Expiry Dt(.*)/(.*\d{4})", result, re.IGNORECASE)
     
     if(not x):
+        print("exp")
         idCardData['isValid'] = False
         return idCardData
 
-    idCardData['expiryDate'] = x.group(2).strip()
+    idCardData['expiryDate'] = x.group(2).strip().replace('.', ',')
 
     try:
         issueDate = datetime.strptime(idCardData['issueDate'], '%b %d, %Y')
@@ -195,6 +200,7 @@ def verifyFace(image, profileImage):
     profileEncodings = face_recognition.face_encodings(profileImage)
     
     if(len(imageEncodings) < 1):
+        print("Is less")
         return False
 
     if(len(profileEncodings) != 1):
