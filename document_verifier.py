@@ -24,6 +24,8 @@ def extractDocument(image):
 
     output_data = interpreter.get_tensor(output_details[0]['index'])
 
+    print(output_data[0])
+
     return output_data[0]
 
 
@@ -183,6 +185,8 @@ def extractText(documentType, image):
         image = erode(image) 
 
     result = pytesseract.image_to_string(image, config=custom_config)
+
+    print(result)
 
     return getIDText(result) if documentType == "ID" else getDLText(result)
 
