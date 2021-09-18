@@ -99,7 +99,7 @@ def getIDText(result):
     idCardData['dateOfBirth'] = x.group(2).strip()
 
 
-    x = re.search("Issue Dt(.*)/(.*\d{4})", result, re.IGNORECASE)
+    x = re.search(".ssue Dt(.*)/(.*\d{4})", result, re.IGNORECASE)
     
     if(not x):
         idCardData['isValid'] = False
