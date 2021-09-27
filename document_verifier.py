@@ -181,7 +181,7 @@ def extractText(documentType, image):
     
     if (documentType == "ID"):
         image = brightness(image, 50)
-    image = contrast(image, 80)
+    image = contrast(image, 70)
     image = sharpen(image)
 
     image = get_grayscale(image)
