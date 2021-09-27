@@ -99,7 +99,9 @@ def getIDText(result):
         idCardData['isValid'] = False
         return idCardData
 
-    idCardData['dateOfBirth'] = x.group(2).strip()
+    idCardData['dateOfBirth'] = x.group(2).strip().replace('.', ',')
+    if "," not in idCardData['dateOfBirth']:
+        idCardData['dateOfBirth'] = idCardData['dateOfBirth'].split(' ')[0] + ' ' + idCardData['dateOfBirth'].split(' ')[1] + ', ' + idCardData['dateOfBirth'].split(' ')[2] 
 
 
     x = re.search(" .*ssue Dt(.*)/(.*\d{4})", result, re.IGNORECASE)
@@ -181,7 +183,7 @@ def extractText(documentType, image):
     
     if (documentType == "ID"):
         image = brightness(image, 50)
-    image = contrast(image, 70)
+    image = contrast(image, 80)
     image = sharpen(image)
 
     image = get_grayscale(image)
