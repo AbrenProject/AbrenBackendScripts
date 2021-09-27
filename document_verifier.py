@@ -180,7 +180,7 @@ def extractText(documentType, image):
     custom_config = r'-c tessedit_char_whitelist= 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/  --oem 3 --psm 6'
     
     if (documentType == "ID"):
-        image = brightness(image, 60)
+        image = brightness(image, 50)
     image = contrast(image, 80)
     image = sharpen(image)
 
